@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Reviews - Reviews by User</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <style>
+        body { padding-top: 70px; background-color: #f4f4f4; }
+        .sidebar {
+            position: fixed; top: 70px; bottom: 0; left: 0; width: 220px;
+            background-color: #f8f8f8; padding: 20px 0; border-right: 1px solid #dee2e6;
+            z-index: 1000; overflow-y: auto;
+        }
+        .sidebar .nav { padding-right: 20px; padding-left: 20px; }
+        .sidebar .nav-link { color: #333; }
+        .sidebar .nav-link:hover, .sidebar .nav-link:focus {
+            background-color: #e9ecef; color: #007bff;
+        }
+        .main { margin-left: 220px; padding: 20px; }
+        .alert { display: none; }
+        .table { margin-top: 20px; }
+        .action-btn { margin-right: 5px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        @media (max-width: 767px) {
+            .sidebar { width: 100%; position: relative; top: 0; margin-bottom: 20px; }
+            .main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Travel Reviews Management</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user_details">View User Details</a>
+                    </li>
+                    <li class="nav-item">
+                        <button id="logoutButton" class="btn btn-danger d-none" onclick="logout()">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="/tours">View Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_tour">Add Tour</a></li>
+            <li class="nav-item"><a class="nav-link" href="/nearby_tours">Nearby Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/signup">Add User</a></li>
+            <li class="nav-item"><a class="nav-link" href="/users">User List</a></li>
+            <li class="nav-item"><a class="nav-link" href="/bookings">View Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_booking">Add Booking</a></li>
+            <li class="nav-item"><a class="nav-link active" href="/reviews">View Reviews</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_review">Add Reviews</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <h1 class="mb-4">Reviews by User</h1>
+        <div id="alertMessage" class="alert" role="alert"></div>
+        <div class="input-group mb-3">
+            <input type="text" id="userIdInput" class="form-control" placeholder="Enter User ID">
+            <button class="btn btn-primary" onclick="fetchReviewsByUser()">Fetch Reviews</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Review ID</th>
+                        <th>Tour Destination</th>
+                        <th>User Email</th>
+                        <th>Rating</th>
+                        <th>Review Text</th>
+                        <th>Review Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="userReviewsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user_role = localStorage.getItem('user_role') || 'customer';
+            const logoutButton = document.getElementById('logoutButton');
+            if (user_role === 'admin' || user_role === 'travel_agent') {
+                logoutButton.classList.remove('d-none');
+            }
+        });
+
+        async function logout() {
+            const user_id = localStorage.getItem('user_id');
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_id');
+                    window.location.href = '/';
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Connection Problem', 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertMessage');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 3000);
+        }
+
+        function renderReviews(reviews) {
+            const tbody = document.getElementById('userReviewsTableBody');
+            tbody.innerHTML = '';
+            reviews.forEach(review => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${review.review_id || 'N/A'}</td>
+                    <td>${review.tour_destination || 'N/A'}</td>
+                    <td>${review.user_email || 'N/A'}</td>
+                    <td>${review.rating || 'N/A'}/5</td>
+                    <td>${review.review_text || 'N/A'}</td>
+                    <td>${review.review_date || 'N/A'}</td>
+                    <td>
+                        <a href="/update_review?review_id=${review.review_id}" class="btn btn-primary btn-sm action-btn">Update</a>
+                        <button class="btn btn-danger btn-sm action-btn" onclick="confirmDelete('${review.review_id}', this)">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function fetchReviewsByUser() {
+            const userId = document.getElementById('userIdInput').value.trim();
+            if (!userId) {
+                showAlert('Please enter a User ID', 'warning');
+                return;
+            }
+            try {
+                const response = await fetch(`/api/reviews/user/${userId}`);
+                if (!response.ok) throw new Error('Failed to fetch user reviews');
+                const reviews = await response.json();
+                renderReviews(reviews);
+                if (reviews.length === 0) {
+                    showAlert('No reviews found for this user', 'info');
+                }
+            } catch (error) {
+                showAlert('Error fetching user reviews: ' + error.message, 'danger');
+            }
+        }
+
+        async function confirmDelete(reviewId, button) {
+            if (!confirm(`Are you sure you want to delete review with ID ${reviewId}? This action cannot be undone.`)) {
+                return;
+            }
+            button.disabled = true;
+            button.textContent = 'Deleting...';
+            try {
+                const response = await fetch(`/api/review/delete/${reviewId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showAlert(result.message, 'success');
+                    fetchReviewsByUser(); // Refresh the reviews list
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Error deleting review: ' + error.message, 'danger');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Delete';
+            }
+        }
+    </script>
+</body>
+</html>

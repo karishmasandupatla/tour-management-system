@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Reviews - Add Review</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <style>
+        body { padding-top: 70px; background-color: #f4f4f4; }
+        .sidebar {
+            position: fixed; top: 70px; bottom: 0; left: 0; width: 220px;
+            background-color: #f8f8f8; padding: 20px 0; border-right: 1px solid #dee2e6;
+            z-index: 1000; overflow-y: auto;
+        }
+        .sidebar .nav { padding-right: 20px; padding-left: 20px; }
+        .sidebar .nav-link { color: #333; }
+        .sidebar .nav-link:hover, .sidebar .nav-link:focus {
+            background-color: #e9ecef; color: #007bff;
+        }
+        .main { margin-left: 220px; padding: 20px; }
+        .alert { display: none; }
+        .card { margin-top: 20px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        @media (max-width: 767px) {
+            .sidebar { width: 100%; position: relative; top: 0; margin-bottom: 20px; }
+            .main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Travel Reviews Management</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user_details">View User Details</a>
+                    </li>
+                    <li class="nav-item">
+                        <button id="logoutButton" class="btn btn-danger d-none" onclick="logout()">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="/tours">View Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_tour">Add Tour</a></li>
+            <li class="nav-item"><a class="nav-link" href="/nearby_tours">Nearby Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/signup">Add User</a></li>
+            <li class="nav-item"><a class="nav-link" href="/users">User List</a></li>
+            <li class="nav-item"><a class="nav-link" href="/bookings">View Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_booking">Add Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/reviews">View Reviews</a></li>
+            <li class="nav-item"><a class="nav-link active" href="/add_review">Add Reviews</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <h1 class="mb-4">Add Review</h1>
+        <div id="alertMessage" class="alert" role="alert"></div>
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="userEmail" class="form-label">User Email (Optional)</label>
+                    <input type="email" class="form-control" id="userEmail" placeholder="User Email">
+                </div>
+                <div class="mb-3">
+                    <label for="tourDestination" class="form-label">Tour Destination</label>
+                    <input type="text" class="form-control" id="tourDestination" placeholder="Tour Destination">
+                </div>
+                <div class="mb-3">
+                    <label for="rating" class="form-label">Rating (1-5)</label>
+                    <input type="number" class="form-control" id="rating" min="1" max="5" placeholder="Rating">
+                </div>
+                <div class="mb-3">
+                    <label for="reviewText" class="form-label">Review Text</label>
+                    <textarea class="form-control" id="reviewText" rows="3" placeholder="Review Text"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="reviewDate" class="form-label">Review Date (YYYY-MM-DD)</label>
+                    <input type="date" class="form-control" id="reviewDate" placeholder="Review Date">
+                </div>
+                <button class="btn btn-primary" onclick="addReview()">Add Review</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user_role = localStorage.getItem('user_role') || 'customer';
+            const logoutButton = document.getElementById('logoutButton');
+            if (user_role === 'admin' || user_role === 'travel_agent') {
+                logoutButton.classList.remove('d-none');
+            }
+            // Pre-fill user email if available
+            const user_email = localStorage.getItem('user_email');
+            if (user_email) {
+                document.getElementById('userEmail').value = user_email;
+            }
+        });
+
+        async function logout() {
+            const user_id = localStorage.getItem('user_id');
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_id');
+                    localStorage.removeItem('user_email');
+                    window.location.href = '/';
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Connection Problem', 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertMessage');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 3000);
+        }
+
+        async function addReview() {
+            const user_id = localStorage.getItem('user_id');
+            if (!user_id) {
+                showAlert('You must be logged in to add a review', 'warning');
+                return;
+            }
+
+            let reviewDate = document.getElementById('reviewDate').value;
+            if (!reviewDate) {
+                reviewDate = new Date().toISOString().split('T')[0]; // Default to current date
+            }
+
+            // Frontend validation: Ensure review_date is current or future
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalize to start of day
+            const selectedDate = new Date(reviewDate);
+            if (selectedDate < today) {
+                showAlert('Review date must be today or in the future', 'warning');
+                return;
+            }
+
+            const review = {
+                user_id: user_id,
+                user_email: document.getElementById('userEmail').value.trim(),
+                tour_destination: document.getElementById('tourDestination').value.trim(),
+                rating: parseInt(document.getElementById('rating').value),
+                review_text: document.getElementById('reviewText').value.trim(),
+                review_date: reviewDate
+            };
+
+            if (!review.tour_destination || !review.rating || !review.review_text) {
+                showAlert('Please fill in all required fields (Tour Destination, Rating, Review Text)', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/review/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(review)
+                });
+                const result = await response.json();
+                showAlert(result.message, response.ok ? 'success' : 'danger');
+                if (response.ok) {
+                    // Clear form after successful addition
+                    document.getElementById('userEmail').value = '';
+                    document.getElementById('tourDestination').value = '';
+                    document.getElementById('rating').value = '';
+                    document.getElementById('reviewText').value = '';
+                    document.getElementById('reviewDate').value = '';
+                }
+            } catch (error) {
+                showAlert('Error adding review: ' + error.message, 'danger');
+            }
+        }
+    </script>
+</body>
+</html>

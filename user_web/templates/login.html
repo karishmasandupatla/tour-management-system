@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Travel App</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <style>
+        body {
+            padding-top: 70px; /* Adjust for fixed navbar */
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 400px;
+        }
+        .reset-link a {
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .reset-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Travel App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signup">Sign Up</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">Login</h2>
+        <div class="card p-4 shadow-sm">
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+            <div class="reset-link text-center mt-3">
+                <a onclick="showResetRequestForm()">Forgot Password? Reset here.</a>
+            </div>
+            <div id="message" class="text-center mt-3"></div>
+
+            <!-- Form to request password reset -->
+            <div id="resetRequestForm" class="d-none mt-4">
+                <h3 class="text-center mb-3">Request Password Reset</h3>
+                <form id="resetRequestFormElement">
+                    <div class="mb-3">
+                        <label for="resetEmail" class="form-label">Enter your email</label>
+                        <input type="email" class="form-control" id="resetEmail" required>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">Request Reset</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelResetRequest()">Cancel</button>
+                    </div>
+                </form>
+                <div id="resetRequestMessage" class="text-center mt-3"></div>
+            </div>
+
+            <!-- Form to reset password with token -->
+            <div id="resetPasswordForm" class="d-none mt-4">
+                <h3 class="text-center mb-3">Reset Password</h3>
+                <form id="resetPasswordFormElement">
+                    <div class="mb-3">
+                        <label for="resetToken" class="form-label">Reset Token</label>
+                        <input type="text" class="form-control" id="resetToken" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">Reset Password</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelResetPassword()">Cancel</button>
+                    </div>
+                </form>
+                <div id="resetPasswordMessage" class="text-center mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JavaScript Bundle (includes Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <script>
+        // Show the reset request form
+        function showResetRequestForm() {
+            document.getElementById('resetRequestForm').classList.remove('d-none');
+            document.getElementById('resetPasswordForm').classList.add('d-none');
+            document.getElementById('resetRequestMessage').textContent = '';
+            document.getElementById('resetPasswordMessage').textContent = '';
+        }
+
+        // Cancel reset request and return to initial state
+        function cancelResetRequest() {
+            document.getElementById('resetRequestForm').classList.add('d-none');
+            document.getElementById('resetRequestMessage').textContent = '';
+            document.getElementById('resetRequestFormElement').reset();
+        }
+
+        // Cancel reset password and return to initial state
+        function cancelResetPassword() {
+            document.getElementById('resetPasswordForm').classList.add('d-none');
+            document.getElementById('resetPasswordMessage').textContent = '';
+            document.getElementById('resetPasswordFormElement').reset();
+        }
+
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent default form submission
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const message = document.getElementById('message');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                message.className = response.ok ? 'text-success' : 'text-danger';
+                message.textContent = data.message;
+
+                if (response.ok) {
+                    // Store user role and user_id in localStorage
+                    localStorage.setItem('user_role', data.user_role);
+                    localStorage.setItem('user_id', data.user_id);
+                    // Redirect based on role
+                    setTimeout(() => {
+                        if (data.user_role === 'customer') {
+                            window.location.href = '/customer_welcome';
+                        } else {
+                            window.location.href = '/users';
+                        }
+                    }, 2000); // Redirect after 2 seconds
+                }
+            } catch (error) {
+                message.className = 'text-danger';
+                message.textContent = 'Connection Problem';
+            }
+        });
+
+        // Handle password reset request form submission
+        document.getElementById('resetRequestFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent default form submission
+
+            const email = document.getElementById('resetEmail').value;
+            const message = document.getElementById('resetRequestMessage');
+
+            try {
+                const response = await fetch('/api/reset_password_request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await response.json();
+                message.className = response.ok ? 'text-success' : 'text-danger';
+                message.textContent = data.message;
+
+                if (response.ok) {
+                    // Show the reset password form
+                    document.getElementById('resetRequestForm').classList.add('d-none');
+                    document.getElementById('resetPasswordForm').classList.remove('d-none');
+                    // Pre-fill the token for testing (in a real app, this would be emailed)
+                    document.getElementById('resetToken').value = data.reset_token;
+                }
+            } catch (error) {
+                message.className = 'text-danger';
+                message.textContent = 'Connection Problem';
+            }
+        });
+
+        // Handle password reset form submission
+        document.getElementById('resetPasswordFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent default form submission
+
+            const resetToken = document.getElementById('resetToken').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const message = document.getElementById('resetPasswordMessage');
+
+            try {
+                const response = await fetch('/api/reset_password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reset_token: resetToken, new_password: newPassword })
+                });
+                const data = await response.json();
+                message.className = response.ok ? 'text-success' : 'text-danger';
+                message.textContent = data.message;
+
+                if (response.ok) {
+                    // Hide the reset form and show a success message
+                    setTimeout(() => {
+                        document.getElementById('resetPasswordForm').classList.add('d-none');
+                        document.getElementById('message').className = 'text-success';
+                        document.getElementById('message').textContent = 'Password reset successful. Please log in with your new password.';
+                    }, 2000);
+                }
+            } catch (error) {
+                message.className = 'text-danger';
+                message.textContent = 'Connection Problem';
+            }
+        });
+    </script>
+</body>
+</html>

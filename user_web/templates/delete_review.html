@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Reviews - Delete Review</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <style>
+        body { padding-top: 70px; background-color: #f4f4f4; }
+        .sidebar {
+            position: fixed; top: 70px; bottom: 0; left: 0; width: 220px;
+            background-color: #f8f8f8; padding: 20px 0; border-right: 1px solid #dee2e6;
+            z-index: 1000; overflow-y: auto;
+        }
+        .sidebar .nav { padding-right: 20px; padding-left: 20px; }
+        .sidebar .nav-link { color: #333; }
+        .sidebar .nav-link:hover, .sidebar .nav-link:focus {
+            background-color: #e9ecef; color: #007bff;
+        }
+        .main { margin-left: 220px; padding: 20px; }
+        .alert { display: none; }
+        .card { margin-top: 20px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        @media (max-width: 767px) {
+            .sidebar { width: 100%; position: relative; top: 0; margin-bottom: 20px; }
+            .main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Travel Reviews Management</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user_details">View User Details</a>
+                    </li>
+                    <li class="nav-item">
+                        <button id="logoutButton" class="btn btn-danger d-none" onclick="logout()">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="/tours">View Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_tour">Add Tour</a></li>
+            <li class="nav-item"><a class="nav-link" href="/nearby_tours">Nearby Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/signup">Add User</a></li>
+            <li class="nav-item"><a class="nav-link" href="/users">User List</a></li>
+            <li class="nav-item"><a class="nav-link" href="/bookings">View Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_booking">Add Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/reviews">View Reviews</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_review">Add Reviews</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <h1 class="mb-4">Delete Review</h1>
+        <div id="alertMessage" class="alert" role="alert"></div>
+        <div class="card">
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <input type="text" id="deleteReviewId" class="form-control" placeholder="Enter Review ID">
+                    <button id="deleteButton" class="btn btn-danger" onclick="deleteReview()">Delete Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user_role = localStorage.getItem('user_role') || 'customer';
+            const logoutButton = document.getElementById('logoutButton');
+            if (user_role === 'admin' || user_role === 'travel_agent') {
+                logoutButton.classList.remove('d-none');
+            }
+        });
+
+        async function logout() {
+            const user_id = localStorage.getItem('user_id');
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_id');
+                    window.location.href = '/';
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('Connection Problem', 'danger');
+            }
+        }
+
+        function showAlert(message, type, redirect = false) {
+            const alert = document.getElementById('alertMessage');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+                if (redirect) {
+                    window.location.href = '/reviews';
+                }
+            }, 3000);
+        }
+
+        async function deleteReview() {
+            const reviewId = document.getElementById('deleteReviewId').value.trim();
+            const deleteButton = document.getElementById('deleteButton');
+            if (!reviewId) {
+                showAlert('Please enter a Review ID', 'warning');
+                return;
+            }
+            if (!confirm(`Are you sure you want to delete review with ID ${reviewId}? This action cannot be undone.`)) {
+                return;
+            }
+            deleteButton.disabled = true;
+            deleteButton.textContent = 'Deleting...';
+            try {
+                const response = await fetch(`/api/review/delete/${reviewId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                showAlert(result.message, response.ok ? 'success' : 'danger', response.ok);
+                if (response.ok) {
+                    document.getElementById('deleteReviewId').value = '';
+                }
+            } catch (error) {
+                showAlert('Error deleting review: ' + error.message, 'danger');
+            } finally {
+                deleteButton.disabled = false;
+                deleteButton.textContent = 'Delete Review';
+            }
+        }
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const reviewId = urlParams.get('review_id');
+            if (reviewId) {
+                document.getElementById('deleteReviewId').value = reviewId;
+            }
+        };
+    </script>
+</body>
+</html>

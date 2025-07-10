@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View All Bookings - Travel App</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <style>
+        body {
+            padding-top: 70px;
+            background-color: #f4f4f4;
+        }
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            bottom: 0;
+            left: 0;
+            width: 220px;
+            background-color: #f8f8f8;
+            padding: 20px 0;
+            border-right: 1px solid #dee2e6;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .sidebar .nav {
+            padding-right: 20px;
+            padding-left: 20px;
+        }
+        .sidebar .nav-link {
+            color: #333;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link:focus {
+            background-color: #e9ecef;
+            color: #007bff;
+        }
+        .main {
+            margin-left: 220px;
+            padding: 20px;
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        /* Updated styles for booking cards */
+        .booking-card {
+            padding: 10px 15px; /* Reduced padding */
+            margin-bottom: 10px; /* Reduced margin between cards */
+        }
+        .booking-details {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid */
+            gap: 5px; /* Reduced gap between items */
+        }
+        .booking-details p {
+            margin: 0; /* Remove default margin */
+            font-size: 0.9rem; /* Smaller font size */
+        }
+        .booking-details p strong {
+            font-size: 0.95rem; /* Slightly larger for labels */
+        }
+        .booking-actions {
+            display: flex;
+            gap: 5px; /* Reduced gap between buttons */
+            align-items: center;
+        }
+        .booking-actions .btn {
+            font-size: 0.85rem; /* Smaller buttons */
+            padding: 5px 10px; /* Reduced button padding */
+        }
+        @media (max-width: 767px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                top: 0;
+                margin-bottom: 20px;
+            }
+            .main {
+                margin-left: 0;
+            }
+            .booking-details {
+                grid-template-columns: 1fr; /* Stack on smaller screens */
+            }
+            .booking-actions {
+                flex-wrap: wrap; /* Allow buttons to wrap */
+                justify-content: flex-start;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Travel App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user_details">View User Details</a>
+                    </li>
+                    <li class="nav-item">
+                        <button id="logoutButton" class="btn btn-danger d-none" onclick="logout()">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="/tours">View Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_tour">Add Tour</a></li>
+            <li class="nav-item"><a class="nav-link" href="/nearby_tours">Nearby Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/signup">Add User</a></li>
+            <li class="nav-item"><a class="nav-link" href="/users">User List</a></li>
+            <li class="nav-item"><a class="nav-link active" href="/bookings">View Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_booking">Add Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/reviews">View Reviews</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_review">Add Reviews</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <h2 class="mb-4">All Bookings</h2>
+        <div class="mb-3">
+            <a href="/booking" class="btn btn-primary">View Booking by Tour ID</a>
+        </div>
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        {% if bookings %}
+            <ul class="list-group">
+                {% for booking in bookings %}
+                    <li class="list-group-item booking-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="booking-details">
+                                <p><strong>Booking Ref:</strong> {{ booking.booking_reference }}</p>
+                                <p><strong>User ID:</strong> {{ booking.user_id }}</p>
+                                <p><strong>Email:</strong> {{ booking.user_email }}</p>
+                                <p><strong>Tour ID:</strong> {{ booking.tour_id }}</p>
+                                <p><strong>Destination:</strong> {{ booking.tour_destination }}</p>
+                                <p><strong>Dates:</strong> {{ booking.tour_dates }}</p>
+                                <p><strong>Booking Status:</strong> {{ booking.booking_status }}</p>
+                                <p><strong>Payment Status:</strong> {{ booking.payment_status }}</p>
+                                <p><strong>Amount:</strong> ${{ booking.payment_amount }}</p>
+                            </div>
+                            <div class="booking-actions">
+                                <a href="/update_payment?booking_reference={{ booking.booking_reference }}" class="btn btn-success btn-sm">Update Payment</a>
+                                <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ booking.booking_reference }}', this)">Delete</button>
+                                <a href="/checkout_session?booking_reference={{ booking.booking_reference }}" class="btn btn-primary btn-sm">Checkout</a>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-info">No bookings found.</div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap 5 JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user_role = localStorage.getItem('user_role') || 'customer';
+            const logoutButton = document.getElementById('logoutButton');
+
+            if (user_role === 'admin' || user_role === 'travel_agent') {
+                logoutButton.classList.remove('d-none');
+            }
+        });
+
+        async function logout() {
+            const user_id = localStorage.getItem('user_id');
+
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_id');
+                    window.location.href = '/';
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Connection Problem');
+            }
+        }
+
+        function confirmDelete(bookingReference, button) {
+            const confirmed = confirm(`Are you sure you want to delete booking with reference ${bookingReference}? This action cannot be undone.`);
+
+            if (confirmed) {
+                button.disabled = true;
+                button.textContent = 'Deleting...';
+                try {
+                    window.location.href = `/delete_booking?booking_reference=${encodeURIComponent(bookingReference)}`;
+                } catch (error) {
+                    alert('Failed to initiate deletion request');
+                    button.disabled = false;
+                    button.textContent = 'Delete';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

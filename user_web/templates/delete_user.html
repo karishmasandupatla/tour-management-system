@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete User - Travel App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 5px; }
+        h2 { text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #c82333; }
+        .message { text-align: center; margin-top: 10px; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Delete User</h2>
+        <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" required>
+        </div>
+        <button onclick="deleteUser()">Delete User</button>
+        <p class="message" id="message"></p>
+    </div>
+    <script>
+        async function deleteUser() {
+            const full_name = document.getElementById('full_name').value;
+            const message = document.getElementById('message');
+            const user_role = localStorage.getItem('user_role') || 'customer';
+
+            try {
+                const response = await fetch(`/deleteuser/${encodeURIComponent(full_name)}`, {
+                    method: 'DELETE',
+                    headers: { 'User-Role': user_role }
+                });
+                const data = await response.json();
+                message.className = response.ok ? 'message success' : 'message error';
+                message.textContent = data.message;
+            } catch (error) {
+                message.className = 'message error';
+                message.textContent = 'Connection Problem';
+            }
+        }
+    </script>
+</body>
+</html>

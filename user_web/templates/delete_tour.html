@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Operation - Delete Tour by Name</title>
+    <!-- Bootstrap 5.3.0 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script>
+        const bootstrapCss = document.querySelector('link[href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"]');
+        if (!bootstrapCss.sheet) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = '/static/css/bootstrap.min.css';
+            document.head.appendChild(link);
+        }
+    </script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Tour Operation</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+
+                    <li class="nav-item">
+                        <button id="logoutButton" class="btn btn-danger d-none ms-2" onclick="logout()">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <h1>Delete Tour by Name</h1>
+        <div id="alert" class="alert" style="display: none;"></div>
+        <form id="deleteTourForm">
+            <div class="mb-3">
+                <label for="tourName" class="form-label">Tour Name</label>
+                <input type="text" class="form-control" id="tourName" name="tourName" value="{{ tour_name if tour_name else '' }}" required>
+            </div>
+            <button type="submit" class="btn btn-danger">Delete Tour</button>
+            <a href="/tours" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <!-- Bootstrap 5.3.0 JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script>
+        if (typeof bootstrap === 'undefined') {
+            document.write('<script src="/static/js/bootstrap.bundle.min.js"><\/script>');
+        }
+
+        const user_role = localStorage.getItem('user_role') || 'customer';
+        const logoutButton = document.getElementById('logoutButton');
+
+        if (user_role === 'admin' || user_role === 'travel_agent') {
+            logoutButton.classList.remove('d-none');
+        }
+
+        document.getElementById('deleteTourForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const tourName = document.getElementById('tourName').value.trim();
+            const message = document.getElementById('alert');
+
+            // Show confirmation popup
+            const confirmed = window.confirm(`Are you sure you want to delete the tour "${tourName}"? This action cannot be undone.`);
+            if (!confirmed) {
+                return; // Exit if the user cancels the action
+            }
+
+            console.log('Deleting tour with name:', tourName);
+            console.log('User Role:', user_role);
+
+            try {
+                const response = await fetch(`/api/tour/delete/name/${encodeURIComponent(tourName)}`, {
+                    method: 'DELETE',
+                    headers: { 'User-Role': user_role }
+                });
+
+                console.log('Response Status:', response.status);
+                const result = await response.json();
+                console.log('Response Data:', result);
+
+                if (response.ok) {
+                    message.className = 'alert alert-success';
+                    message.textContent = result.message || 'Tour deleted successfully';
+                    message.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/tours';
+                    }, 2000);
+                } else {
+                    message.className = 'alert alert-danger';
+                    message.textContent = result.message || 'Failed to delete tour';
+                    message.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error deleting tour:', error);
+                message.className = 'alert alert-danger';
+                message.textContent = 'Connection Problem: ' + error.message;
+                message.style.display = 'block';
+            }
+        });
+
+        async function logout() {
+            const message = document.getElementById('alert');
+            const user_id = localStorage.getItem('user_id');
+
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id })
+                });
+                const data = await response.json();
+                message.className = response.ok ? 'alert alert-success' : 'alert alert-danger';
+                message.textContent = data.message;
+                message.style.display = 'block';
+
+                if (response.ok) {
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_id');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                }
+            } catch (error) {
+                message.className = 'alert alert-danger';
+                message.textContent = 'Connection Problem';
+                message.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

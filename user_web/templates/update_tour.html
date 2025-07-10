@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Operation - Update Tour</title>
+    <!-- Bootstrap 5.3.6 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <style>
+        body {
+            padding-top: 70px;
+            background-color: #f4f4f4;
+        }
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            bottom: 0;
+            left: 0;
+            width: 220px;
+            background-color: #f8f8f8;
+            padding: 20px 0;
+            border-right: 1px solid #dee2e6;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .sidebar .nav {
+            padding-right: 20px;
+            padding-left: 20px;
+        }
+        .sidebar .nav-link {
+            color: #333;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link:focus {
+            background-color: #e9ecef;
+            color: #007bff;
+        }
+        .main {
+            margin-left: 220px;
+            padding: 20px;
+        }
+        .message {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .text-danger {
+            color: #dc3545;
+        }
+        .text-success {
+            color: #28a745;
+        }
+        @media (max-width: 767px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                top: 0;
+                margin-bottom: 20px;
+            }
+            .main {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Travel App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user_details">View User Details</a>
+                    </li>
+                    <li class="nav-item">
+                        <button id="logoutButton" class="btn btn-danger d-none" onclick="logout()">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="/tours">View Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_tour">Add Tour</a></li>
+            <li class="nav-item"><a class="nav-link" href="/nearby_tours">Nearby Tours</a></li>
+            <li class="nav-item"><a class="nav-link" href="/signup">Add User</a></li>
+            <li class="nav-item"><a class="nav-link" href="/users">User List</a></li>
+            <li class="nav-item"><a class="nav-link" href="/bookings">View Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_booking">Add Booking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/reviews">View Reviews</a></li>
+            <li class="nav-item"><a class="nav-link" href="/add_review">Add Reviews</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <h1>Update Tour</h1>
+        {% if status == 200 %}
+            <div id="alert" class="message" style="display: none;"></div>
+            <form id="updateTourForm">
+                <input type="hidden" name="TourID" value="{{ tour.TourID }}">
+                <div class="mb-3">
+                    <label for="tourName" class="form-label">Tour Name</label>
+                    <input type="text" class="form-control" id="tourName" name="TourName" value="{{ tour.TourName }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="duration" class="form-label">Duration</label>
+                    <input type="text" class="form-control" id="duration" name="Duration" value="{{ tour.Duration }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" name="StartDate" value="{{ tour.StartDate }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="endDate" name="EndDate" value="{{ tour.EndDate }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="destinations" class="form-label">Destinations (comma-separated)</label>
+                    <input type="text" class="form-control" id="destinations" name="Destinations" value="{{ tour.Destinations | join(', ') }}">
+                </div>
+                <div class="mb-3">
+                    <label for="imageUrl" class="form-label">Image URLs (comma-separated)</label>
+                    <input type="text" class="form-control" id="imageUrl" name="image_url" value="{{ tour.image_url | join(', ') }}">
+                </div>
+                <button type="submit" class="btn btn-primary">Update Tour</button>
+                <a href="/tours" class="btn btn-secondary">Cancel</a>
+            </form>
+        {% else %}
+            <p>{{ tour.message }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap 5.3.6 JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <script>
+        const user_role = localStorage.getItem('user_role') || 'customer';
+        const logoutButton = document.getElementById('logoutButton');
+
+        if (user_role === 'admin' || user_role === 'travel_agent') {
+            logoutButton.classList.remove('d-none');
+        }
+
+        {% if status == 200 %}
+        document.getElementById('updateTourForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                TourName: formData.get('TourName'),
+                Duration: formData.get('Duration'),
+                StartDate: formData.get('StartDate'),
+                EndDate: formData.get('EndDate'),
+                Destinations: formData.get('Destinations').split(',').map(d => d.trim()).filter(d => d),
+                image_url: formData.get('image_url').split(',').map(url => url.trim()).filter(url => url)
+            };
+            const tourId = formData.get('TourID');
+            const alert = document.getElementById('alert');
+
+            console.log('Updating tour with ID:', tourId);
+            console.log('User Role:', user_role);
+            console.log('Data to send:', data);
+
+            try {
+                const response = await fetch(`/api/tour/update/${encodeURIComponent(tourId)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Role': user_role
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                console.log('Response Status:', response.status);
+                const result = await response.json();
+                console.log('Response Data:', result);
+
+                if (response.ok) {
+                    alert.className = 'message text-success';
+                    alert.textContent = result.message || 'Tour updated successfully';
+                    alert.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/tours';
+                    }, 2000);
+                } else {
+                    alert.className = 'message text-danger';
+                    alert.textContent = result.message || 'Failed to update tour';
+                    alert.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error updating tour:', error);
+                alert.className = 'message text-danger';
+                alert.textContent = 'Connection Problem: ' + error.message;
+                alert.style.display = 'block';
+            }
+        });
+        {% endif %}
+
+        async function logout() {
+            const message = document.getElementById('alert');
+            const user_id = localStorage.getItem('user_id');
+
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id })
+                });
+                const data = await response.json();
+                message.className = response.ok ? 'message text-success' : 'message text-danger';
+                message.textContent = data.message;
+
+                if (response.ok) {
+                    localStorage.removeItem('user_role');
+                    localStorage.removeItem('user_id');
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                message.className = 'message text-danger';
+                message.textContent = 'Connection Problem';
+            }
+        }
+    </script>
+</body>
+</html>
