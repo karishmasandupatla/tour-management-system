@@ -45,6 +45,11 @@ A web-based application to simplify tour planning, management, and booking. This
 | Tools Used        | Git, GitHub, Postman   |
 
 ---
+## Author:Karishma Sandupatla
+🌐 GitHub:https://github.com/karishmasandupatla
+📧 Email:ksbyte22@gmail.com 
+
+--
 
 ##  How to Run
 
@@ -61,3 +66,4 @@ pip install -r requirements.txt
 
 # Run the app
 python user_web/user_app.py
+
